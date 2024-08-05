@@ -1,0 +1,14 @@
+node_modules
+.vuepress/.cache
+.vuepress/.temp
+.vuepress/layouts
+.vuepress/public
+.vuepress/styles
+.vuepress/config.ts
+docs
+blogs
+plugins
+package-lock.json
+package.json
+Readme.md
+send.py
