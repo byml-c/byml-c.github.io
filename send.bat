@@ -1,3 +1,4 @@
+echo off
 echo "Uploading to server"
 python ./send.py
 
