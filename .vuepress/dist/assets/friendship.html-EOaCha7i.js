@@ -1,1 +1,0 @@
-import{_ as e,o as t,c as r}from"./app-DBH65W4-.js";const a={};function n(i,o){return t(),r("div")}const c=e(a,[["render",n],["__file","friendship.html.vue"]]),l=JSON.parse('{"path":"/friendship.html","title":"","lang":"zh-CN","frontmatter":{"layout":"FriendshipLayout"},"headers":[],"git":{},"filePathRelative":null}');export{c as comp,l as data};
