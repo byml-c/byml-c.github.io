@@ -1,11 +1,11 @@
-#@echo off
-#echo Uploading to server
-#python ./send.py
+@REM @echo off
+@REM echo Uploading to server
+@REM python ./send.py
 
-#echo Do you want to upload to Github? (y/n)
-#set /p choice=
-#if %choice%==y goto upload
-#else goto finish
+@REM echo Do you want to upload to Github? (y/n)
+@REM set /p choice=
+@REM if %choice%==y goto upload
+@REM else goto finish
 
 :upload
 echo Uploading Github
