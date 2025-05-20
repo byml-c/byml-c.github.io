@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Timer</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* 计次显示 */
+        .cycle-counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: background 0.5s ease;
+            cursor: pointer; /* 添加指针样式以表明可点击 */
+            user-select: none; /* 防止文本被选中 */
+        }
+        
+        body.phase2 .cycle-counter {
+            background: rgba(255, 255, 255, 0.6);
+            color: black;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            background: #000000;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+        body.phase2 {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .container {
+            width: 25%;
+            min-width: 300px;
+            max-width: 600px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* 计时显示 */
+        .time-display {
+            font-size: 8rem;
+            font-weight: 300;
+            margin-bottom: 3rem;
+            letter-spacing: -0.05em;
+            transition: all 0.5s ease;
+        }
+
+        /* 进度条容器 */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        /* 进度条动画 */
+        .progress-bar {
+            height: 100%;
+            background: #bbbbbb;
+            width: 100%;
+            transition: width 0.3s linear;
+        }
+
+        /* 按钮样式 */
+        .timer-button {
+            background: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #333333;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timer-button:hover {
+            background: #2d2d2d;
+            border-color: #444444;
+        }
+
+        .timer-button:disabled {
+            background: #0a0a0a;
+            border-color: #1a1a1a;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="cycle-counter" id="cycleCounter" onclick="toggleFullScreen()">0</div>
+    <div class="container">
+        <div class="time-display" id="time">25</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+        <button class="timer-button" id="timerButton" onclick="startTimer()">Start</button>
+    </div>
+
+    <script>
+        let timerInterval;
+        let currentPhase = 1; // 1: Work phase, 2: Break phase
+        let currentDuration = 0;
+        let totalWorkTime = 25 * 60;
+        let totalBreakTime = 5 * 60;
+        let completedCycles = 0; // 完成的计时周期数量
+        
+        // 从 localStorage 中加载完成的周期数
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedCycles = localStorage.getItem('completedCycles');
+            if (savedCycles !== null) {
+                completedCycles = parseInt(savedCycles, 10);
+                updateCycleCounter();
+            }
+        });
+        
+        // 更新计次显示
+        function updateCycleCounter() {
+            localStorage.setItem('completedCycles', completedCycles.toString());
+            
+            // 检查全屏状态并更新显示
+            const isFullscreen = document.fullscreenElement || 
+                                document.webkitFullscreenElement || 
+                                document.mozFullScreenElement || 
+                                document.msFullscreenElement;
+                                
+            const counter = document.getElementById('cycleCounter');
+            counter.textContent = `${completedCycles}`;
+        }
+        
+        // 切换全屏模式
+        function toggleFullScreen() {
+            if (!document.fullscreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement && 
+                !document.msFullscreenElement) {
+                // 如果当前不是全屏，则进入全屏
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
+                    document.documentElement.msRequestFullscreen();
+                }
+            } else {
+                // 如果当前是全屏，则退出全屏
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+            }
+        }
+        
+        function startTimer() {
+            // 重置初始状态
+            document.body.className = 'phase2'; // 初始为phase1样式
+            document.body.classList.remove('phase2');
+            document.body.classList.add('phase1');
+            
+            // 清除现有计时器
+            if (timerInterval) clearInterval(timerInterval);
+            
+            // 初始化新计时
+            currentPhase = 1;
+            currentDuration = totalWorkTime;
+            document.getElementById('time').textContent = '25';
+            document.getElementById('progress').style.width = '100%';
+            
+            // 重置按钮状态和文本
+            const button = document.getElementById('timerButton');
+            button.disabled = true;
+            button.textContent = 'Work Time';
+            
+            // 启动新计时器
+            timerInterval = setInterval(() => {
+                currentDuration--;
+                
+                if (currentDuration <= 0) {
+                    if (currentPhase === 1) {
+                        // 进入休息阶段
+                        currentPhase = 2;
+                        currentDuration = totalBreakTime;
+                        document.body.classList.remove('phase1');
+                        document.body.classList.add('phase2');
+                        document.getElementById('time').textContent = '05';
+                        document.getElementById('progress').style.width = '100%';
+                        button.textContent = 'Relax Time';
+                    } else {
+                        // 计时完成
+                        clearInterval(timerInterval);
+                        document.getElementById('time').textContent = '00';
+                        document.getElementById('progress').style.width = '0%';
+                        button.disabled = false;
+                        button.textContent = 'Start';
+                        
+                        // 增加完成的周期计数并更新显示
+                        completedCycles++;
+                        updateCycleCounter();
+                    }
+                } else {
+                    // 计算剩余分钟数
+                    const remainingMinutes = Math.ceil(currentDuration / 60);
+                    document.getElementById('time').textContent = String(remainingMinutes).padStart(2, '0');
+                    
+                    // 计算当前阶段进度
+                    const totalTime = currentPhase === 1 ? totalWorkTime : totalBreakTime;
+                    const progressWidth = (currentDuration / totalTime) * 100;
+                    document.getElementById('progress').style.width = `${progressWidth}%`;
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
